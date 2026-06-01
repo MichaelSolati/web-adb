@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Adb } from '@yume-chan/adb';
-import { captureScreen } from '../utils/adb';
+import { captureScreen, sendSwipe, sendTap } from '../utils/adb';
 
 interface ScreenViewerProps {
   adb: Adb | null;
@@ -23,6 +23,52 @@ const ScreenViewer: React.FC<ScreenViewerProps> = ({
   useEffect(() => {
     streamingRef.current = isStreaming;
   }, [isStreaming]);
+
+  // Map a CSS-space point on the canvas element to device pixel coordinates
+  const toDeviceCoords = (e: { clientX: number; clientY: number }) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  };
+
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!adb) return;
+    const pt = toDeviceCoords(e);
+    if (!pt) return;
+    sendTap(adb, pt.x, pt.y).catch(console.warn);
+  }, [adb]);
+
+  // Accumulate wheel delta so fast scrolls produce longer swipes
+  const wheelAccRef = useRef(0);
+  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCanvasWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    if (!adb) return;
+    e.preventDefault();
+    const pt = toDeviceCoords(e);
+    if (!pt) return;
+
+    wheelAccRef.current += e.deltaY;
+
+    if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+    wheelTimerRef.current = setTimeout(() => {
+      const delta = wheelAccRef.current;
+      wheelAccRef.current = 0;
+
+      // Clamp swipe length to ±800px; map 1 wheel unit ≈ 0.8 device px
+      const distance = Math.max(-800, Math.min(800, delta * 0.8));
+      const x = pt.x;
+      const y = pt.y;
+      // scrolling down (positive delta) → swipe finger upward (y decreases)
+      sendSwipe(adb, x, y, x, y - distance, 250).catch(console.warn);
+    }, 50);
+  }, [adb]);
 
   const renderFrame = async (pngBytes: Uint8Array) => {
     if (!canvasRef.current) return;
@@ -97,9 +143,18 @@ const ScreenViewer: React.FC<ScreenViewerProps> = ({
     }
   }, [isStreaming, adb, onStopStream]);
 
+  const interactive = !!adb && !showPlaceholder;
+
   return (
     <div id="screen-container">
-      <canvas ref={canvasRef} id="screen-canvas" className={!showPlaceholder ? 'visible' : ''}></canvas>
+      <canvas
+        ref={canvasRef}
+        id="screen-canvas"
+        className={!showPlaceholder ? 'visible' : ''}
+        style={interactive ? { cursor: 'pointer' } : undefined}
+        onClick={interactive ? handleCanvasClick : undefined}
+        onWheel={interactive ? handleCanvasWheel : undefined}
+      />
       {isStreaming && <div className="stream-fps visible">{fps} fps</div>}
       {showPlaceholder && (
         <div id="placeholder">

@@ -70,6 +70,19 @@ export async function sendText(adb: Adb, text: string) {
   await adb.subprocess.noneProtocol.spawnWait(["input", "text", escaped]);
 }
 
+export async function sendTap(adb: Adb, x: number, y: number) {
+  await adb.subprocess.noneProtocol.spawnWait(["input", "tap", String(Math.round(x)), String(Math.round(y))]);
+}
+
+export async function sendSwipe(adb: Adb, x1: number, y1: number, x2: number, y2: number, durationMs = 200) {
+  await adb.subprocess.noneProtocol.spawnWait([
+    "input", "swipe",
+    String(Math.round(x1)), String(Math.round(y1)),
+    String(Math.round(x2)), String(Math.round(y2)),
+    String(durationMs),
+  ]);
+}
+
 export function nowTimestamp() {
   return new Date().toLocaleTimeString("en-GB", { hour12: false });
 }
