@@ -1,0 +1,287 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --accent: #4f8ef7;
+  --accent-hover: #6aa3ff;
+  --danger: #e05c5c;
+  --success: #4caf7d;
+  --text: #e2e5f0;
+  --text-muted: #6b7280;
+  --radius: 8px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+h1 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+#controls {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+button:hover:not(:disabled) {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#btn-connect {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#btn-connect:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+#btn-disconnect {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+#btn-disconnect:hover:not(:disabled) {
+  background: rgba(224, 92, 92, 0.1);
+}
+
+#btn-stream.streaming {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+#text-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#txt-send {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#txt-send:focus {
+  border-color: var(--accent);
+}
+
+#txt-send:disabled {
+  opacity: 0.4;
+}
+
+#btn-send {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#btn-send:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+#status {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+#status.connected {
+  color: var(--success);
+}
+
+#status.error {
+  color: var(--danger);
+}
+
+main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#screen-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 20px;
+  position: relative;
+}
+
+#screen-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: none;
+  object-fit: contain;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+#screen-canvas.visible {
+  display: block;
+}
+
+#placeholder {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+#placeholder p {
+  margin-bottom: 8px;
+}
+
+#placeholder .hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+#screenshots-panel {
+  width: 220px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#screenshots-panel h2 {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#screenshots-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.screenshot-item {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.screenshot-item:hover {
+  border-color: var(--accent);
+}
+
+.screenshot-item img {
+  width: 100%;
+  display: block;
+}
+
+.screenshot-item .meta {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.screenshot-item .save-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.screenshot-item .delete-btn {
+  font-size: 13px;
+  padding: 1px 6px;
+  line-height: 1;
+  color: var(--danger);
+  border-color: transparent;
+  background: transparent;
+}
+
+.screenshot-item .delete-btn:hover:not(:disabled) {
+  background: rgba(224, 92, 92, 0.15);
+  border-color: var(--danger);
+}
+
+.stream-fps {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  background: rgba(0,0,0,0.6);
+  color: var(--success);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  display: none;
+}
+
+.stream-fps.visible {
+  display: block;
+}
