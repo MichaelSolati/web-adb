@@ -25,6 +25,36 @@ export async function connectDevice() {
   return new Adb(transport);
 }
 
+export async function disconnectDevice(adb: Adb) {
+  const transport = adb.transport as any;
+
+  // Dispose the stream layer first so in-flight reads/writes don't fail loudly
+  try { await transport.dispose(); } catch (e) { console.warn('transport.dispose', e); }
+
+  // Walk down to the raw USBDevice and release the claimed interface
+  try {
+    const connection = transport.connection;
+    const rawDevice = connection?.device?.raw as any;
+    if (rawDevice) {
+      const config = rawDevice.configuration;
+      if (config) {
+        for (const iface of config.interfaces) {
+          if (iface.claimed) {
+            try {
+              await rawDevice.releaseInterface(iface.interfaceNumber);
+            } catch (e) {
+              console.warn(`releaseInterface(${iface.interfaceNumber})`, e);
+            }
+          }
+        }
+      }
+      try { await rawDevice.close(); } catch (e) { console.warn('device.close', e); }
+    }
+  } catch (e) {
+    console.warn('USB cleanup', e);
+  }
+}
+
 export async function captureScreen(adb: Adb) {
   const bytes = await adb.subprocess.noneProtocol.spawnWait(["screencap", "-p"]);
   return bytes;

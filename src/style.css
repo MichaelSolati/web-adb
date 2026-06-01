@@ -205,14 +205,33 @@ main {
   flex-shrink: 0;
 }
 
-#screenshots-panel h2 {
+#screenshots-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 8px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+#screenshots-panel-header h2 {
   font-size: 13px;
   font-weight: 600;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  flex: 1;
+}
+
+#screenshots-bulk-actions {
+  display: flex;
+  gap: 4px;
+}
+
+#screenshots-bulk-actions button {
+  font-size: 11px;
+  padding: 3px 8px;
 }
 
 #screenshots-list {
@@ -224,25 +243,73 @@ main {
   gap: 8px;
 }
 
+#screenshots-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
 .screenshot-item {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.15s;
+  flex-shrink: 0;
 }
 
 .screenshot-item:hover {
   border-color: var(--accent);
 }
 
+.screenshot-thumb-wrap {
+  position: relative;
+}
+
 .screenshot-item img {
   width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+  background: #0a0b10;
   display: block;
 }
 
+.screenshot-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.screenshot-item:hover .screenshot-hover-overlay {
+  opacity: 1;
+}
+
+.screenshot-hover-overlay button {
+  font-size: 11px;
+  padding: 3px 7px;
+  background: rgba(26, 29, 39, 0.9);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.screenshot-hover-overlay button:hover {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+.screenshot-hover-overlay .delete-btn {
+  color: var(--danger);
+  border-color: rgba(224, 92, 92, 0.4);
+}
+
 .screenshot-item .meta {
-  padding: 6px 8px;
+  padding: 5px 8px;
   font-size: 11px;
   color: var(--text-muted);
   display: flex;
@@ -250,23 +317,74 @@ main {
   align-items: center;
 }
 
-.screenshot-item .save-btn {
-  font-size: 11px;
-  padding: 2px 8px;
-}
-
-.screenshot-item .delete-btn {
-  font-size: 13px;
-  padding: 1px 6px;
-  line-height: 1;
+.delete-btn {
   color: var(--danger);
   border-color: transparent;
   background: transparent;
 }
 
-.screenshot-item .delete-btn:hover:not(:disabled) {
+.delete-btn:hover:not(:disabled) {
   background: rgba(224, 92, 92, 0.15);
   border-color: var(--danger);
+}
+
+/* Modal */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 90vw;
+  max-height: 92vh;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+}
+
+.modal-img {
+  display: block;
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  background: #0a0b10;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-timestamp {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.modal-close-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.modal-close-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .stream-fps {
