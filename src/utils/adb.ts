@@ -62,11 +62,12 @@ export async function captureScreen(adb: Adb) {
 
 export async function sendText(adb: Adb, text: string) {
   if (!text) return;
+  // input text runs through the Android shell, so all metacharacters must be escaped.
+  // Spaces become %s (adb input text convention). Backslash must go first.
   const escaped = text
     .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'")
     .replace(/ /g, "%s")
-    .replace(/&/g, "\\&");
+    .replace(/[()[\]{}<>|;&$#~^*?!"'`]/g, "\\$&");
   await adb.subprocess.noneProtocol.spawnWait(["input", "text", escaped]);
 }
 
