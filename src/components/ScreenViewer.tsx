@@ -20,6 +20,10 @@ const ScreenViewer: React.FC<ScreenViewerProps> = ({
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const streamingRef = useRef(isStreaming);
 
+  // drag state — refs so we don't trigger re-renders during a gesture
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragStartTimeRef = useRef(0);
+
   useEffect(() => {
     streamingRef.current = isStreaming;
   }, [isStreaming]);
@@ -37,12 +41,43 @@ const ScreenViewer: React.FC<ScreenViewerProps> = ({
     };
   };
 
-  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!adb) return;
     const pt = toDeviceCoords(e);
     if (!pt) return;
-    sendTap(adb, pt.x, pt.y).catch(console.warn);
+    dragStartRef.current = pt;
+    dragStartTimeRef.current = Date.now();
   }, [adb]);
+
+  // TAP_THRESHOLD: if the finger moved less than this many device px it's a tap
+  const TAP_THRESHOLD = 10;
+
+  const handleCanvasMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!adb || !dragStartRef.current) return;
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+
+    const end = toDeviceCoords(e);
+    if (!end) return;
+
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const elapsed = Date.now() - dragStartTimeRef.current;
+
+    if (dist < TAP_THRESHOLD) {
+      sendTap(adb, start.x, start.y).catch(console.warn);
+    } else {
+      // duration mirrors how long the user held the drag, clamped to 100–1500ms
+      const duration = Math.max(100, Math.min(1500, elapsed));
+      sendSwipe(adb, start.x, start.y, end.x, end.y, duration).catch(console.warn);
+    }
+  }, [adb]);
+
+  // Cancel drag if mouse leaves the canvas mid-gesture
+  const handleCanvasMouseLeave = useCallback(() => {
+    dragStartRef.current = null;
+  }, []);
 
   // Accumulate wheel delta so fast scrolls produce longer swipes
   const wheelAccRef = useRef(0);
@@ -151,8 +186,10 @@ const ScreenViewer: React.FC<ScreenViewerProps> = ({
         ref={canvasRef}
         id="screen-canvas"
         className={!showPlaceholder ? 'visible' : ''}
-        style={interactive ? { cursor: 'pointer' } : undefined}
-        onClick={interactive ? handleCanvasClick : undefined}
+        style={interactive ? { cursor: 'crosshair' } : undefined}
+        onMouseDown={interactive ? handleCanvasMouseDown : undefined}
+        onMouseUp={interactive ? handleCanvasMouseUp : undefined}
+        onMouseLeave={interactive ? handleCanvasMouseLeave : undefined}
         onWheel={interactive ? handleCanvasWheel : undefined}
       />
       {isStreaming && <div className="stream-fps visible">{fps} fps</div>}
